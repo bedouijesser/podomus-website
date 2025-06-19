@@ -1,12 +1,11 @@
 
 import { db } from '../db';
 import { contactMessagesTable } from '../db/schema';
-import { type UpdateContactMessageStatusInput, type ContactMessage } from '../schema';
 import { eq } from 'drizzle-orm';
+import { type UpdateContactMessageStatusInput, type ContactMessage } from '../schema';
 
 export const updateContactMessageStatus = async (input: UpdateContactMessageStatusInput): Promise<ContactMessage> => {
   try {
-    // Update the contact message status
     const result = await db.update(contactMessagesTable)
       .set({
         status: input.status
@@ -16,7 +15,7 @@ export const updateContactMessageStatus = async (input: UpdateContactMessageStat
       .execute();
 
     if (result.length === 0) {
-      throw new Error(`Contact message with id ${input.id} not found`);
+      throw new Error('Contact message not found');
     }
 
     return result[0];

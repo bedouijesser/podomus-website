@@ -1,15 +1,14 @@
 
 import { db } from '../db';
 import { patientsTable } from '../db/schema';
-import { eq } from 'drizzle-orm';
 import { type GetPatientByEmailInput, type Patient } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export const getPatientByEmail = async (input: GetPatientByEmailInput): Promise<Patient | null> => {
   try {
     const result = await db.select()
       .from(patientsTable)
       .where(eq(patientsTable.email, input.email))
-      .limit(1)
       .execute();
 
     if (result.length === 0) {
@@ -18,7 +17,7 @@ export const getPatientByEmail = async (input: GetPatientByEmailInput): Promise<
 
     return result[0];
   } catch (error) {
-    console.error('Get patient by email failed:', error);
+    console.error('Failed to get patient by email:', error);
     throw error;
   }
 };

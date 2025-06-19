@@ -11,7 +11,7 @@ export const getActiveServices = async (): Promise<Service[]> => {
       .where(eq(servicesTable.is_active, true))
       .execute();
 
-    // Convert numeric fields back to numbers
+    // Convert numeric price field back to number
     return results.map(service => ({
       ...service,
       price: service.price ? parseFloat(service.price) : null

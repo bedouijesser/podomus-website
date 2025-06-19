@@ -9,13 +9,13 @@ export const getServices = async (): Promise<Service[]> => {
       .from(servicesTable)
       .execute();
 
-    // Convert numeric fields back to numbers
+    // Convert numeric price field back to number
     return results.map(service => ({
       ...service,
       price: service.price ? parseFloat(service.price) : null
     }));
   } catch (error) {
-    console.error('Failed to fetch services:', error);
+    console.error('Failed to get services:', error);
     throw error;
   }
 };

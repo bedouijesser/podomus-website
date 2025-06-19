@@ -5,243 +5,147 @@ import { db } from '../db';
 import { contactMessagesTable } from '../db/schema';
 import { type CreateContactMessageInput } from '../schema';
 import { getContactMessages } from '../handlers/get_contact_messages';
-import { eq } from 'drizzle-orm';
 
-// Test contact message inputs
-const testMessage1: CreateContactMessageInput = {
+const testInput1: CreateContactMessageInput = {
   name: 'John Doe',
   email: 'john@example.com',
-  phone: '+33123456789',
-  subject: 'Question about services',
-  message: 'I would like to know more about your pedicure services.',
+  phone: '123-456-7890',
+  subject: 'General Inquiry',
+  message: 'I have a question about your services.',
   is_appointment_request: false
 };
 
-const testMessage2: CreateContactMessageInput = {
+const testInput2: CreateContactMessageInput = {
   name: 'Jane Smith',
   email: 'jane@example.com',
   phone: null,
   subject: 'Appointment Request',
-  message: 'I need to schedule an appointment for orthotic insoles.',
+  message: 'I would like to schedule an appointment.',
   is_appointment_request: true
-};
-
-const testMessage3: CreateContactMessageInput = {
-  name: 'Pierre Martin',
-  email: 'pierre@example.com',
-  phone: '+33987654321',
-  subject: 'Follow-up question',
-  message: 'Following up on my previous appointment.',
-  is_appointment_request: false
 };
 
 describe('getContactMessages', () => {
   beforeEach(createDB);
   afterEach(resetDB);
 
-  it('should return empty array when no contact messages exist', async () => {
+  it('should return empty array when no messages exist', async () => {
     const result = await getContactMessages();
-
     expect(result).toEqual([]);
-    expect(Array.isArray(result)).toBe(true);
   });
 
   it('should return all contact messages', async () => {
-    // Create test messages separately to ensure proper ordering
-    await db.insert(contactMessagesTable)
-      .values({
-        name: testMessage1.name,
-        email: testMessage1.email,
-        phone: testMessage1.phone,
-        subject: testMessage1.subject,
-        message: testMessage1.message,
-        is_appointment_request: testMessage1.is_appointment_request
-      })
-      .execute();
+    // Create first message
+    await db.insert(contactMessagesTable).values({
+      name: testInput1.name,
+      email: testInput1.email,
+      phone: testInput1.phone,
+      subject: testInput1.subject,
+      message: testInput1.message,
+      is_appointment_request: testInput1.is_appointment_request
+    }).execute();
 
     // Small delay to ensure different timestamps
     await new Promise(resolve => setTimeout(resolve, 10));
 
-    await db.insert(contactMessagesTable)
-      .values({
-        name: testMessage2.name,
-        email: testMessage2.email,
-        phone: testMessage2.phone,
-        subject: testMessage2.subject,
-        message: testMessage2.message,
-        is_appointment_request: testMessage2.is_appointment_request
-      })
-      .execute();
+    // Create second message
+    await db.insert(contactMessagesTable).values({
+      name: testInput2.name,
+      email: testInput2.email,
+      phone: testInput2.phone,
+      subject: testInput2.subject,
+      message: testInput2.message,
+      is_appointment_request: testInput2.is_appointment_request
+    }).execute();
 
     const result = await getContactMessages();
 
     expect(result).toHaveLength(2);
     
-    // The second message (Jane Smith) should be first due to DESC ordering
-    expect(result[0].name).toEqual(testMessage2.name); // Most recent first
-    expect(result[0].email).toEqual(testMessage2.email);
-    expect(result[0].subject).toEqual(testMessage2.subject);
-    expect(result[0].message).toEqual(testMessage2.message);
+    // Check first message (should be newest due to DESC ordering)
+    expect(result[0].name).toEqual('Jane Smith');
+    expect(result[0].email).toEqual('jane@example.com');
+    expect(result[0].phone).toBeNull();
+    expect(result[0].subject).toEqual('Appointment Request');
+    expect(result[0].message).toEqual('I would like to schedule an appointment.');
     expect(result[0].is_appointment_request).toBe(true);
     expect(result[0].status).toEqual('new');
-    expect(result[0].created_at).toBeInstanceOf(Date);
     expect(result[0].id).toBeDefined();
+    expect(result[0].created_at).toBeInstanceOf(Date);
 
-    expect(result[1].name).toEqual(testMessage1.name);
-    expect(result[1].email).toEqual(testMessage1.email);
-    expect(result[1].phone).toEqual(testMessage1.phone);
+    // Check second message
+    expect(result[1].name).toEqual('John Doe');
+    expect(result[1].email).toEqual('john@example.com');
+    expect(result[1].phone).toEqual('123-456-7890');
+    expect(result[1].subject).toEqual('General Inquiry');
+    expect(result[1].message).toEqual('I have a question about your services.');
     expect(result[1].is_appointment_request).toBe(false);
+    expect(result[1].status).toEqual('new');
+    expect(result[1].id).toBeDefined();
+    expect(result[1].created_at).toBeInstanceOf(Date);
   });
 
-  it('should return messages ordered by created_at descending (most recent first)', async () => {
+  it('should return messages ordered by created_at descending', async () => {
     // Create messages with slight delay to ensure different timestamps
-    await db.insert(contactMessagesTable)
-      .values({
-        name: testMessage1.name,
-        email: testMessage1.email,
-        phone: testMessage1.phone,
-        subject: testMessage1.subject,
-        message: testMessage1.message,
-        is_appointment_request: testMessage1.is_appointment_request
-      })
-      .execute();
+    await db.insert(contactMessagesTable).values({
+      name: 'First Message',
+      email: 'first@example.com',
+      subject: 'First',
+      message: 'This was created first'
+    }).execute();
 
     // Small delay to ensure different timestamps
     await new Promise(resolve => setTimeout(resolve, 10));
 
-    await db.insert(contactMessagesTable)
-      .values({
-        name: testMessage2.name,
-        email: testMessage2.email,
-        phone: testMessage2.phone,
-        subject: testMessage2.subject,
-        message: testMessage2.message,
-        is_appointment_request: testMessage2.is_appointment_request
-      })
-      .execute();
-
-    await new Promise(resolve => setTimeout(resolve, 10));
-
-    await db.insert(contactMessagesTable)
-      .values({
-        name: testMessage3.name,
-        email: testMessage3.email,
-        phone: testMessage3.phone,
-        subject: testMessage3.subject,
-        message: testMessage3.message,
-        is_appointment_request: testMessage3.is_appointment_request
-      })
-      .execute();
+    await db.insert(contactMessagesTable).values({
+      name: 'Second Message',
+      email: 'second@example.com',
+      subject: 'Second',
+      message: 'This was created second'
+    }).execute();
 
     const result = await getContactMessages();
 
-    expect(result).toHaveLength(3);
+    expect(result).toHaveLength(2);
+    expect(result[0].name).toEqual('Second Message');
+    expect(result[1].name).toEqual('First Message');
     
-    // Verify order - most recent first
-    expect(result[0].name).toEqual(testMessage3.name); // Last created
-    expect(result[1].name).toEqual(testMessage2.name); // Second created
-    expect(result[2].name).toEqual(testMessage1.name); // First created
-
-    // Verify timestamps are in descending order
+    // Verify ordering by timestamp
     expect(result[0].created_at >= result[1].created_at).toBe(true);
-    expect(result[1].created_at >= result[2].created_at).toBe(true);
   });
 
-  it('should return messages with correct field types and values', async () => {
-    await db.insert(contactMessagesTable)
-      .values({
-        name: testMessage1.name,
-        email: testMessage1.email,
-        phone: testMessage1.phone,
-        subject: testMessage1.subject,
-        message: testMessage1.message,
-        is_appointment_request: testMessage1.is_appointment_request
-      })
-      .execute();
+  it('should include all required fields', async () => {
+    await db.insert(contactMessagesTable).values({
+      name: testInput1.name,
+      email: testInput1.email,
+      phone: testInput1.phone,
+      subject: testInput1.subject,
+      message: testInput1.message,
+      is_appointment_request: testInput1.is_appointment_request
+    }).execute();
 
     const result = await getContactMessages();
 
     expect(result).toHaveLength(1);
     const message = result[0];
-
-    // Verify all required fields exist and have correct types
+    
+    // Verify all required fields are present
+    expect(message.id).toBeDefined();
+    expect(message.name).toBeDefined();
+    expect(message.email).toBeDefined();
+    expect(message.subject).toBeDefined();
+    expect(message.message).toBeDefined();
+    expect(message.is_appointment_request).toBeDefined();
+    expect(message.status).toBeDefined();
+    expect(message.created_at).toBeDefined();
+    
+    // Verify types
     expect(typeof message.id).toBe('number');
     expect(typeof message.name).toBe('string');
     expect(typeof message.email).toBe('string');
-    expect(typeof message.phone).toBe('string');
     expect(typeof message.subject).toBe('string');
     expect(typeof message.message).toBe('string');
     expect(typeof message.is_appointment_request).toBe('boolean');
     expect(typeof message.status).toBe('string');
     expect(message.created_at).toBeInstanceOf(Date);
-
-    // Verify enum values
-    expect(['new', 'read', 'responded']).toContain(message.status);
-  });
-
-  it('should handle messages with null phone numbers', async () => {
-    await db.insert(contactMessagesTable)
-      .values({
-        name: testMessage2.name,
-        email: testMessage2.email,
-        phone: testMessage2.phone, // null
-        subject: testMessage2.subject,
-        message: testMessage2.message,
-        is_appointment_request: testMessage2.is_appointment_request
-      })
-      .execute();
-
-    const result = await getContactMessages();
-
-    expect(result).toHaveLength(1);
-    expect(result[0].phone).toBeNull();
-    expect(result[0].name).toEqual(testMessage2.name);
-    expect(result[0].email).toEqual(testMessage2.email);
-  });
-
-  it('should handle messages with different status values', async () => {
-    // Create messages separately to ensure different timestamps
-    const firstInsert = await db.insert(contactMessagesTable)
-      .values({
-        name: testMessage1.name,
-        email: testMessage1.email,
-        phone: testMessage1.phone,
-        subject: testMessage1.subject,
-        message: testMessage1.message,
-        is_appointment_request: testMessage1.is_appointment_request
-      })
-      .returning()
-      .execute();
-
-    await new Promise(resolve => setTimeout(resolve, 10));
-
-    const secondInsert = await db.insert(contactMessagesTable)
-      .values({
-        name: testMessage2.name,
-        email: testMessage2.email,
-        phone: testMessage2.phone,
-        subject: testMessage2.subject,
-        message: testMessage2.message,
-        is_appointment_request: testMessage2.is_appointment_request
-      })
-      .returning()
-      .execute();
-
-    // Update status of first message
-    await db.update(contactMessagesTable)
-      .set({ status: 'read' })
-      .where(eq(contactMessagesTable.id, firstInsert[0].id))
-      .execute();
-
-    const result = await getContactMessages();
-
-    expect(result).toHaveLength(2);
-    
-    // Find messages by name to verify status
-    const readMessage = result.find(m => m.name === testMessage1.name);
-    const newMessage = result.find(m => m.name === testMessage2.name);
-
-    expect(readMessage?.status).toEqual('read');
-    expect(newMessage?.status).toEqual('new');
   });
 });

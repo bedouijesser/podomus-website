@@ -2,12 +2,11 @@
 import { db } from '../db';
 import { appointmentsTable } from '../db/schema';
 import { type GetAppointmentsByDateRangeInput, type Appointment } from '../schema';
-import { gte, lte, and } from 'drizzle-orm';
+import { and, gte, lte } from 'drizzle-orm';
 
 export const getAppointmentsByDateRange = async (input: GetAppointmentsByDateRangeInput): Promise<Appointment[]> => {
   try {
-    // Query appointments within the date range (inclusive of both start and end dates)
-    const results = await db.select()
+    const result = await db.select()
       .from(appointmentsTable)
       .where(
         and(
@@ -15,12 +14,11 @@ export const getAppointmentsByDateRange = async (input: GetAppointmentsByDateRan
           lte(appointmentsTable.appointment_date, input.end_date)
         )
       )
-      .orderBy(appointmentsTable.appointment_date)
       .execute();
 
-    return results;
+    return result;
   } catch (error) {
-    console.error('Failed to get appointments by date range:', error);
+    console.error('Get appointments by date range failed:', error);
     throw error;
   }
 };

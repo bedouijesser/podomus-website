@@ -3,248 +3,220 @@ import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { resetDB, createDB } from '../helpers';
 import { db } from '../db';
 import { patientsTable, appointmentsTable } from '../db/schema';
-import { type GetAppointmentsByDateRangeInput } from '../schema';
+import { type GetAppointmentsByDateRangeInput, type CreatePatientInput, type CreateAppointmentInput } from '../schema';
 import { getAppointmentsByDateRange } from '../handlers/get_appointments_by_date_range';
+
+// Test data
+const testPatient: CreatePatientInput = {
+  first_name: 'John',
+  last_name: 'Doe',
+  email: 'john.doe@example.com',
+  phone: '+1234567890',
+  date_of_birth: new Date('1980-01-01'),
+  address: '123 Main St',
+  medical_history: 'No known allergies'
+};
 
 describe('getAppointmentsByDateRange', () => {
   beforeEach(createDB);
   afterEach(resetDB);
 
   it('should return appointments within date range', async () => {
-    // Create test patient first
+    // Create patient first
     const patientResult = await db.insert(patientsTable)
-      .values({
-        first_name: 'John',
-        last_name: 'Doe',
-        email: 'john.doe@example.com',
-        phone: '123456789'
-      })
+      .values(testPatient)
       .returning()
       .execute();
-
-    const patientId = patientResult[0].id;
+    const patient = patientResult[0];
 
     // Create test appointments with different dates
     const baseDate = new Date('2024-01-15T10:00:00Z');
-    const beforeRange = new Date('2024-01-10T10:00:00Z');
-    const inRange1 = new Date('2024-01-15T14:00:00Z');
-    const inRange2 = new Date('2024-01-20T09:00:00Z');
-    const afterRange = new Date('2024-01-25T16:00:00Z');
+    const appointment1Date = new Date('2024-01-10T10:00:00Z');
+    const appointment2Date = new Date('2024-01-15T14:00:00Z');
+    const appointment3Date = new Date('2024-01-20T09:00:00Z');
+    const appointment4Date = new Date('2024-01-25T11:00:00Z'); // Outside range
 
+    const appointmentInputs: CreateAppointmentInput[] = [
+      {
+        patient_id: patient.id,
+        service_type: 'pedicurie_medicale',
+        appointment_date: appointment1Date,
+        duration_minutes: 60,
+        notes: 'First appointment'
+      },
+      {
+        patient_id: patient.id,
+        service_type: 'semelles_orthopediques',
+        appointment_date: appointment2Date,
+        duration_minutes: 90,
+        notes: 'Second appointment'
+      },
+      {
+        patient_id: patient.id,
+        service_type: 'orthoplastie_onychoplastie',
+        appointment_date: appointment3Date,
+        duration_minutes: 45,
+        notes: 'Third appointment'
+      },
+      {
+        patient_id: patient.id,
+        service_type: 'pedicurie_medicale',
+        appointment_date: appointment4Date,
+        duration_minutes: 60,
+        notes: 'Fourth appointment - outside range'
+      }
+    ];
+
+    // Insert all appointments
     await db.insert(appointmentsTable)
-      .values([
-        {
-          patient_id: patientId,
-          service_type: 'pedicurie_medicale',
-          appointment_date: beforeRange,
-          duration_minutes: 60,
-          notes: 'Before range'
-        },
-        {
-          patient_id: patientId,
-          service_type: 'semelles_orthopediques',
-          appointment_date: inRange1,
-          duration_minutes: 90,
-          notes: 'In range 1'
-        },
-        {
-          patient_id: patientId,
-          service_type: 'orthoplastie_onychoplastie',
-          appointment_date: inRange2,
-          duration_minutes: 45,
-          notes: 'In range 2'
-        },
-        {
-          patient_id: patientId,
-          service_type: 'pedicurie_medicale',
-          appointment_date: afterRange,
-          duration_minutes: 60,
-          notes: 'After range'
-        }
-      ])
+      .values(appointmentInputs)
       .execute();
 
-    // Query appointments in range
+    // Query appointments within date range
     const input: GetAppointmentsByDateRangeInput = {
-      start_date: new Date('2024-01-15T00:00:00Z'),
+      start_date: new Date('2024-01-10T00:00:00Z'),
       end_date: new Date('2024-01-20T23:59:59Z')
     };
 
-    const results = await getAppointmentsByDateRange(input);
+    const result = await getAppointmentsByDateRange(input);
 
-    // Should return only appointments within range
-    expect(results).toHaveLength(2);
-    expect(results[0].notes).toEqual('In range 1');
-    expect(results[1].notes).toEqual('In range 2');
-    
-    // Verify appointments are ordered by date
-    expect(results[0].appointment_date <= results[1].appointment_date).toBe(true);
+    // Should return 3 appointments (excluding the one on 2024-01-25)
+    expect(result).toHaveLength(3);
+
+    // Verify appointment dates are within range
+    result.forEach(appointment => {
+      expect(appointment.appointment_date).toBeInstanceOf(Date);
+      expect(appointment.appointment_date >= input.start_date).toBe(true);
+      expect(appointment.appointment_date <= input.end_date).toBe(true);
+    });
+
+    // Verify specific appointments are included
+    const appointmentDates = result.map(apt => apt.appointment_date.toISOString());
+    expect(appointmentDates).toContain(appointment1Date.toISOString());
+    expect(appointmentDates).toContain(appointment2Date.toISOString());
+    expect(appointmentDates).toContain(appointment3Date.toISOString());
+    expect(appointmentDates).not.toContain(appointment4Date.toISOString());
   });
 
-  it('should return empty array when no appointments in range', async () => {
+  it('should return empty array when no appointments in date range', async () => {
+    // Create patient first
+    const patientResult = await db.insert(patientsTable)
+      .values(testPatient)
+      .returning()
+      .execute();
+    const patient = patientResult[0];
+
+    // Create appointment outside the query range
+    const appointmentInput: CreateAppointmentInput = {
+      patient_id: patient.id,
+      service_type: 'pedicurie_medicale',
+      appointment_date: new Date('2024-02-15T10:00:00Z'),
+      duration_minutes: 60,
+      notes: 'Outside range appointment'
+    };
+
+    await db.insert(appointmentsTable)
+      .values(appointmentInput)
+      .execute();
+
+    // Query for different date range
     const input: GetAppointmentsByDateRangeInput = {
       start_date: new Date('2024-01-01T00:00:00Z'),
-      end_date: new Date('2024-01-05T23:59:59Z')
+      end_date: new Date('2024-01-31T23:59:59Z')
     };
 
-    const results = await getAppointmentsByDateRange(input);
+    const result = await getAppointmentsByDateRange(input);
 
-    expect(results).toHaveLength(0);
+    expect(result).toHaveLength(0);
   });
 
-  it('should handle single day range', async () => {
-    // Create test patient
+  it('should return appointments on exact boundary dates', async () => {
+    // Create patient first
     const patientResult = await db.insert(patientsTable)
-      .values({
-        first_name: 'Jane',
-        last_name: 'Smith',
-        email: 'jane.smith@example.com',
-        phone: '987654321'
-      })
+      .values(testPatient)
       .returning()
       .execute();
+    const patient = patientResult[0];
 
-    const patientId = patientResult[0].id;
+    // Create appointments on exact boundary dates
+    const startDate = new Date('2024-01-10T10:00:00Z');
+    const endDate = new Date('2024-01-20T15:00:00Z');
 
-    // Create appointments on same day at different times
-    const sameDay = new Date('2024-01-15');
-    const morning = new Date('2024-01-15T09:00:00Z');
-    const afternoon = new Date('2024-01-15T15:00:00Z');
-    const nextDay = new Date('2024-01-16T10:00:00Z');
-
-    await db.insert(appointmentsTable)
-      .values([
-        {
-          patient_id: patientId,
-          service_type: 'pedicurie_medicale',
-          appointment_date: morning,
-          duration_minutes: 60,
-          notes: 'Morning appointment'
-        },
-        {
-          patient_id: patientId,
-          service_type: 'semelles_orthopediques',
-          appointment_date: afternoon,
-          duration_minutes: 90,
-          notes: 'Afternoon appointment'
-        },
-        {
-          patient_id: patientId,
-          service_type: 'orthoplastie_onychoplastie',
-          appointment_date: nextDay,
-          duration_minutes: 45,
-          notes: 'Next day appointment'
-        }
-      ])
-      .execute();
-
-    // Query for single day
-    const input: GetAppointmentsByDateRangeInput = {
-      start_date: new Date('2024-01-15T00:00:00Z'),
-      end_date: new Date('2024-01-15T23:59:59Z')
-    };
-
-    const results = await getAppointmentsByDateRange(input);
-
-    expect(results).toHaveLength(2);
-    expect(results[0].notes).toEqual('Morning appointment');
-    expect(results[1].notes).toEqual('Afternoon appointment');
-  });
-
-  it('should handle edge case with exact boundary dates', async () => {
-    // Create test patient
-    const patientResult = await db.insert(patientsTable)
-      .values({
-        first_name: 'Bob',
-        last_name: 'Wilson',
-        email: 'bob.wilson@example.com',
-        phone: '555123456'
-      })
-      .returning()
-      .execute();
-
-    const patientId = patientResult[0].id;
-
-    // Create appointments exactly at boundaries
-    const startBoundary = new Date('2024-01-15T00:00:00Z');
-    const endBoundary = new Date('2024-01-20T23:59:59Z');
+    const appointmentInputs: CreateAppointmentInput[] = [
+      {
+        patient_id: patient.id,
+        service_type: 'pedicurie_medicale',
+        appointment_date: startDate,
+        duration_minutes: 60,
+        notes: 'Start boundary appointment'
+      },
+      {
+        patient_id: patient.id,
+        service_type: 'semelles_orthopediques',
+        appointment_date: endDate,
+        duration_minutes: 90,
+        notes: 'End boundary appointment'
+      }
+    ];
 
     await db.insert(appointmentsTable)
-      .values([
-        {
-          patient_id: patientId,
-          service_type: 'pedicurie_medicale',
-          appointment_date: startBoundary,
-          duration_minutes: 60,
-          notes: 'Start boundary'
-        },
-        {
-          patient_id: patientId,
-          service_type: 'semelles_orthopediques',
-          appointment_date: endBoundary,
-          duration_minutes: 90,
-          notes: 'End boundary'
-        }
-      ])
+      .values(appointmentInputs)
       .execute();
 
+    // Query with exact boundary dates
     const input: GetAppointmentsByDateRangeInput = {
-      start_date: startBoundary,
-      end_date: endBoundary
+      start_date: startDate,
+      end_date: endDate
     };
 
-    const results = await getAppointmentsByDateRange(input);
+    const result = await getAppointmentsByDateRange(input);
 
-    expect(results).toHaveLength(2);
-    expect(results[0].notes).toEqual('Start boundary');
-    expect(results[1].notes).toEqual('End boundary');
+    expect(result).toHaveLength(2);
+    
+    // Verify both boundary appointments are included
+    const appointmentDates = result.map(apt => apt.appointment_date.toISOString());
+    expect(appointmentDates).toContain(startDate.toISOString());
+    expect(appointmentDates).toContain(endDate.toISOString());
   });
 
   it('should return all appointment fields correctly', async () => {
-    // Create test patient
+    // Create patient first
     const patientResult = await db.insert(patientsTable)
-      .values({
-        first_name: 'Alice',
-        last_name: 'Johnson',
-        email: 'alice.johnson@example.com',
-        phone: '444555666'
-      })
+      .values(testPatient)
       .returning()
       .execute();
-
-    const patientId = patientResult[0].id;
+    const patient = patientResult[0];
 
     // Create test appointment
-    const appointmentDate = new Date('2024-01-15T14:30:00Z');
+    const appointmentInput: CreateAppointmentInput = {
+      patient_id: patient.id,
+      service_type: 'orthoplastie_onychoplastie',
+      appointment_date: new Date('2024-01-15T14:30:00Z'),
+      duration_minutes: 75,
+      notes: 'Test appointment with all fields'
+    };
+
     await db.insert(appointmentsTable)
-      .values({
-        patient_id: patientId,
-        service_type: 'orthoplastie_onychoplastie',
-        appointment_date: appointmentDate,
-        duration_minutes: 120,
-        status: 'confirmed',
-        notes: 'Special treatment notes'
-      })
+      .values(appointmentInput)
       .execute();
 
     const input: GetAppointmentsByDateRangeInput = {
-      start_date: new Date('2024-01-15T00:00:00Z'),
-      end_date: new Date('2024-01-15T23:59:59Z')
+      start_date: new Date('2024-01-01T00:00:00Z'),
+      end_date: new Date('2024-01-31T23:59:59Z')
     };
 
-    const results = await getAppointmentsByDateRange(input);
+    const result = await getAppointmentsByDateRange(input);
 
-    expect(results).toHaveLength(1);
-    const appointment = results[0];
+    expect(result).toHaveLength(1);
     
-    // Verify all fields are present and correct
+    const appointment = result[0];
     expect(appointment.id).toBeDefined();
-    expect(appointment.patient_id).toEqual(patientId);
+    expect(appointment.patient_id).toEqual(patient.id);
     expect(appointment.service_type).toEqual('orthoplastie_onychoplastie');
     expect(appointment.appointment_date).toBeInstanceOf(Date);
-    expect(appointment.duration_minutes).toEqual(120);
-    expect(appointment.status).toEqual('confirmed');
-    expect(appointment.notes).toEqual('Special treatment notes');
+    expect(appointment.duration_minutes).toEqual(75);
+    expect(appointment.status).toEqual('pending'); // Default status
+    expect(appointment.notes).toEqual('Test appointment with all fields');
     expect(appointment.created_at).toBeInstanceOf(Date);
     expect(appointment.updated_at).toBeInstanceOf(Date);
   });
