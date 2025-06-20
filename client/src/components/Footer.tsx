@@ -7,7 +7,7 @@ interface FooterProps {
 
 export default function Footer({ navigate }: FooterProps) {
   return (
-    <footer className="bg-[#404040] text-white">
+    <footer className="bg-brand-primary text-white">
       <div className="container-max section-padding">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand & Logo */}
@@ -16,7 +16,7 @@ export default function Footer({ navigate }: FooterProps) {
               <div className="w-10 h-10 relative">
                 <svg
                   viewBox="0 0 40 40"
-                  className="w-full h-full text-[#40826D] wireframe-foot"
+                  className="w-full h-full text-brand-teal wireframe-foot"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="1.5"
@@ -30,7 +30,7 @@ export default function Footer({ navigate }: FooterProps) {
                 </svg>
               </div>
               <div className="font-serif text-2xl font-bold">
-                POD<span className="text-[#40826D]">O</span>MUS
+                POD<span className="text-brand-teal">O</span>MUS
               </div>
             </div>
             <p className="text-gray-300 text-sm">
@@ -46,17 +46,17 @@ export default function Footer({ navigate }: FooterProps) {
             <h3 className="font-serif text-lg font-semibold mb-4">Services</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <button onClick={() => navigate('/services/pedicurie-medicale')} className="text-gray-300 hover:text-[#40826D] transition-colors">
+                <button onClick={() => navigate('/services/pedicurie-medicale')} className="text-gray-300 hover:text-brand-teal transition-colors duration-200">
                   Pédicurie Médicale
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('/services/semelles-orthopediques')} className="text-gray-300 hover:text-[#40826D] transition-colors">
+                <button onClick={() => navigate('/services/semelles-orthopediques')} className="text-gray-300 hover:text-brand-teal transition-colors duration-200">
                   Semelles Orthopédiques
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('/services/orthoplastie-onychoplastie')} className="text-gray-300 hover:text-[#40826D] transition-colors">
+                <button onClick={() => navigate('/services/orthoplastie-onychoplastie')} className="text-gray-300 hover:text-brand-teal transition-colors duration-200">
                   Orthoplastie & Onychoplastie
                 </button>
               </li>
@@ -68,17 +68,17 @@ export default function Footer({ navigate }: FooterProps) {
             <h3 className="font-serif text-lg font-semibold mb-4">Navigation</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <button onClick={() => navigate('/about')} className="text-gray-300 hover:text-[#40826D] transition-colors">
+                <button onClick={() => navigate('/about')} className="text-gray-300 hover:text-brand-teal transition-colors duration-200">
                   À Propos
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('/patient-information')} className="text-gray-300 hover:text-[#40826D] transition-colors">
+                <button onClick={() => navigate('/patient-information')} className="text-gray-300 hover:text-brand-teal transition-colors duration-200">
                   Info Patients
                 </button>
               </li>
               <li>
-                <button onClick={() => navigate('/contact')} className="text-gray-300 hover:text-[#40826D] transition-colors">
+                <button onClick={() => navigate('/contact')} className="text-gray-300 hover:text-brand-teal transition-colors duration-200">
                   Contact
                 </button>
               </li>
@@ -90,7 +90,7 @@ export default function Footer({ navigate }: FooterProps) {
             <h3 className="font-serif text-lg font-semibold mb-4">Contact</h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-start space-x-3">
-                <MapPin className="h-4 w-4 text-[#40826D] mt-1 flex-shrink-0" />
+                <MapPin className="h-4 w-4 text-brand-teal mt-1 flex-shrink-0" />
                 <span className="text-gray-300">
                   Bm02, 1er étage, Golf Center 2<br />
                   avenue de l'environnement<br />
@@ -98,15 +98,19 @@ export default function Footer({ navigate }: FooterProps) {
                 </span>
               </div>
               <div className="flex items-center space-x-3">
-                <Phone className="h-4 w-4 text-[#40826D]" />
-                <span className="text-gray-300">28 451 433</span>
+                <Phone className="h-4 w-4 text-brand-teal" />
+                <a href="tel:28451433" className="text-gray-300 hover:text-white transition-colors duration-200">
+                  28 451 433
+                </a>
               </div>
               <div className="flex items-center space-x-3">
-                <Mail className="h-4 w-4 text-[#40826D]" />
-                <span className="text-gray-300">sonda@podomus.tn</span>
+                <Mail className="h-4 w-4 text-brand-teal" />
+                <a href="mailto:sonda@podomus.tn" className="text-gray-300 hover:text-white transition-colors duration-200">
+                  sonda@podomus.tn
+                </a>
               </div>
               <div className="flex items-start space-x-3">
-                <Clock className="h-4 w-4 text-[#40826D] mt-1" />
+                <Clock className="h-4 w-4 text-brand-teal mt-1" />
                 <div className="text-gray-300">
                   <div>Lun-Ven: 8h00-18h00</div>
                   <div>Sam: 8h00-13h00</div>

@@ -43,19 +43,19 @@ export default function Header({ navigate, currentPath }: HeaderProps) {
   return (
     <>
       {/* Top Contact Bar */}
-      <div className="bg-[#40826D] text-white py-2 px-4 text-sm">
+      <div className="bg-brand-teal text-white py-2 px-4 text-sm">
         <div className="container-max flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 hover:text-white/90 transition-colors duration-200">
               <Phone size={14} />
-              <span>28 451 433</span>
+              <a href="tel:28451433" className="hover:underline">28 451 433</a>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 hover:text-white/90 transition-colors duration-200">
               <Mail size={14} />
-              <span>sonda@podomus.tn</span>
+              <a href="mailto:sonda@podomus.tn" className="hover:underline">sonda@podomus.tn</a>
             </div>
           </div>
-          <div className="hidden md:block text-xs">
+          <div className="hidden md:block text-xs opacity-90">
             Bm02, 1er étage, Golf Center 2, La Soukra, Ariana
           </div>
         </div>
@@ -92,8 +92,8 @@ export default function Header({ navigate, currentPath }: HeaderProps) {
                   </svg>
                 </div>
               </div>
-              <div className="font-serif text-2xl font-bold text-[#404040]">
-                POD<span className="text-[#40826D]">O</span>MUS
+              <div className="font-serif text-2xl font-bold text-brand-primary">
+                POD<span className="text-brand-teal">O</span>MUS
               </div>
             </button>
 
@@ -105,8 +105,8 @@ export default function Header({ navigate, currentPath }: HeaderProps) {
                   onClick={() => handleNavClick(item.href)}
                   className={`text-sm font-medium transition-colors duration-200 ${
                     isActive(item.href)
-                      ? 'text-[#40826D] border-b-2 border-[#40826D]'
-                      : 'text-[#404040] hover:text-[#40826D]'
+                      ? 'text-brand-teal border-b-2 border-brand-teal'
+                      : 'text-brand-primary hover:text-brand-teal'
                   }`}
                 >
                   {item.name}
@@ -136,8 +136,8 @@ export default function Header({ navigate, currentPath }: HeaderProps) {
                       onClick={() => handleNavClick(item.href)}
                       className={`text-lg font-medium transition-colors duration-200 text-left ${
                         isActive(item.href)
-                          ? 'text-[#40826D]'
-                          : 'text-[#404040] hover:text-[#40826D]'
+                          ? 'text-brand-teal'
+                          : 'text-brand-primary hover:text-brand-teal'
                       }`}
                     >
                       {item.name}

@@ -70,14 +70,16 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#E8E4D9] to-[#F5F5F5] flex items-center justify-center">
-        <div className="text-[#404040] font-serif text-2xl animate-pulse">PODOMUS</div>
+      <div className="min-h-screen bg-gradient-to-br from-brand-warm to-brand-clinical flex items-center justify-center">
+        <div className="text-brand-primary font-serif text-2xl animate-pulse">
+          POD<span className="text-brand-teal">O</span>MUS
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E8E4D9] to-[#F5F5F5] text-[#404040]">
+    <div className="min-h-screen bg-gradient-to-br from-brand-warm to-brand-clinical text-brand-primary">
       <Header navigate={navigate} currentPath={currentPath} />
       <PageTransition currentPath={currentPath}>
         {getCurrentPage()}

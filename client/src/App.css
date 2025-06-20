@@ -1,57 +1,49 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  html {
-    scroll-behavior: smooth;
-  }
-  
-  body {
-    font-family: 'Inter', sans-serif;
-    font-weight: 400;
-    line-height: 1.6;
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', serif;
-    font-weight: 600;
-    line-height: 1.2;
-  }
-  
-  * {
-    box-sizing: border-box;
-  }
-}
-
 @layer components {
+  /* Primary CTA Button - Deep Magenta */
   .btn-primary {
-    @apply bg-[#C71585] hover:bg-[#A0125F] text-white font-medium px-8 py-3 rounded-full transition-all duration-300 transform hover:scale-105 hover:shadow-lg;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-accent/20;
+    @apply bg-[var(--deep-magenta)] hover:bg-[var(--deep-magenta-hover)] text-white px-8 py-3 shadow-sm;
+    @apply transform hover:scale-105 hover:shadow-lg;
   }
   
+  /* Secondary Button - Soft Teal */
   .btn-secondary {
-    @apply bg-[#40826D] hover:bg-[#335A4F] text-white font-medium px-6 py-2 rounded-full transition-all duration-300;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-primary/20;
+    @apply bg-[var(--soft-teal)] hover:bg-[var(--soft-teal-hover)] text-white px-6 py-2 shadow-sm;
   }
   
-  .text-accent {
-    @apply text-[#40826D];
+  /* Brand Text Colors */
+  .text-brand-teal {
+    @apply text-[var(--soft-teal)];
   }
   
-  .text-primary {
-    @apply text-[#404040];
+  .text-brand-primary {
+    @apply text-[var(--charcoal-gray)];
   }
   
-  .bg-primary {
-    @apply bg-[#F5F5F5];
+  .text-brand-magenta {
+    @apply text-[var(--deep-magenta)];
   }
   
-  .bg-warm {
-    @apply bg-[#E8E4D9];
+  /* Brand Background Colors */
+  .bg-brand-warm {
+    @apply bg-[var(--warm-beige)];
   }
   
+  .bg-brand-clinical {
+    @apply bg-[var(--clinical-white)];
+  }
+  
+  .bg-brand-teal {
+    @apply bg-[var(--soft-teal)];
+  }
+  
+  .bg-brand-magenta {
+    @apply bg-[var(--deep-magenta)];
+  }
+  
+  /* Layout Utilities */
   .section-padding {
     @apply py-16 px-4 sm:px-6 lg:px-8;
   }
@@ -60,14 +52,17 @@
     @apply max-w-7xl mx-auto;
   }
   
+  /* Enhanced Card Hover Effect */
   .card-hover {
-    @apply transition-all duration-300 hover:transform hover:scale-105 hover:shadow-xl;
+    @apply transition-all duration-300 hover:shadow-xl;
+    @apply hover:transform hover:scale-[1.02];
   }
   
+  /* Professional animations respecting accessibility */
   .fadeInUp {
-    animation: fadeInUp 0.8s ease-out forwards;
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
   }
   
   .stagger-1 {
@@ -82,11 +77,41 @@
     animation-delay: 0.3s;
   }
   
+  .stagger-4 {
+    animation-delay: 0.4s;
+  }
+  
+  /* Wireframe Foot Styling with Brand Colors */
   .wireframe-foot {
-    filter: drop-shadow(0 10px 30px rgba(64, 130, 109, 0.2));
+    filter: drop-shadow(0 8px 25px rgba(64, 130, 109, 0.15));
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .wireframe-foot:hover {
+    filter: drop-shadow(0 12px 35px rgba(64, 130, 109, 0.25));
+    transform: translateY(-2px);
+  }
+  
+  /* Form Focus States */
+  .form-focus {
+    @apply focus:border-[var(--soft-teal)] focus:ring-2 focus:ring-[var(--soft-teal)]/20 transition-colors duration-200;
+  }
+  
+  /* Professional microinteractions */
+  .micro-interaction {
+    @apply transition-all duration-200 ease-out;
+  }
+  
+  .micro-interaction:hover {
+    @apply transform translate-y-[-1px];
+  }
+  
+  .micro-interaction:active {
+    @apply transform translate-y-[0px];
   }
 }
 
+/* Keyframe Animations */
 @keyframes fadeInUp {
   to {
     opacity: 1;
@@ -94,6 +119,25 @@
   }
 }
 
+@keyframes draw {
+  from {
+    stroke-dasharray: 0 1000;
+  }
+  to {
+    stroke-dasharray: 1000 0;
+  }
+}
+
+@keyframes dash {
+  from {
+    stroke-dashoffset: 20;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Accessibility - Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .fadeInUp {
     animation: none;
@@ -101,29 +145,62 @@
     transform: none;
   }
   
-  .card-hover {
+  .card-hover:hover {
+    transform: none;
+    scale: none;
+  }
+  
+  .btn-primary:hover, 
+  .btn-secondary:hover,
+  .wireframe-foot:hover,
+  .micro-interaction:hover {
     transform: none;
   }
   
-  .btn-primary:hover, .btn-secondary:hover {
-    transform: none;
+  .wireframe-foot {
+    animation: none;
+  }
+  
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-/* Custom scrollbar */
+/* Enhanced Custom Scrollbar with Brand Colors */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #E8E4D9;
+  background: var(--warm-beige);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #40826D;
+  background: var(--soft-teal);
   border-radius: 4px;
+  transition: background-color 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #335A4F;
+  background: var(--soft-teal-hover);
+}
+
+/* Firefox Scrollbar Support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--soft-teal) var(--warm-beige);
+}
+
+/* Selection Colors */
+::selection {
+  background-color: rgba(64, 130, 109, 0.2);
+  color: var(--charcoal-gray);
+}
+
+::-moz-selection {
+  background-color: rgba(64, 130, 109, 0.2);
+  color: var(--charcoal-gray);
 }
